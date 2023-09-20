@@ -33,6 +33,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.VideogameAsset
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -43,6 +44,7 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemColors
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Text
@@ -167,8 +169,8 @@ class MainActivity : ComponentActivity() {
                     fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.titleLarge
                 )
-                Text(text = "Copyright © 2023 Kyle Eichlin")
-                Text(text = "Designed with ✝️ in Hawaii")
+                Text(text = "Copyright © 2023 Kyle Eichlin", textAlign = TextAlign.Center)
+                Text(text = "Designed with ✝️ in Hawaii", textAlign = TextAlign.Center)
                 Text(
                     text = "This app is in no way affiliated with LaunchBox or Unbroken Software, LLC.",
                     style = MaterialTheme.typography.bodySmall,
@@ -279,7 +281,7 @@ fun SearchResultView(searchResult: SearchResult) {
         ) {
             AsyncImage(
                 model = searchResult.imageUrl.ifEmpty { null },
-                fallback = painterResource(id = R.drawable.stadia_controller_24px),
+                fallback = painterResource(id = R.drawable.videogame_asset_off_24px),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
@@ -348,9 +350,9 @@ fun PlatformPreviewView(platformPreview: PlatformPreview) {
         ) {
             val context = LocalContext.current
             AsyncImage(
-                model = platformPreview.imageUrl,
+                model = platformPreview.imageUrl.ifEmpty { null },
                 contentDescription = null,
-                fallback = painterResource(id = R.drawable.stadia_controller_24px),
+                fallback = painterResource(id = R.drawable.videogame_asset_off_24px),
                 modifier = Modifier.height(75.dp)
             )
             Text(
@@ -385,7 +387,7 @@ data class MultiButtonData(
 
 @Composable
 fun MultiButton(data: List<MultiButtonData>) {
-    ElevatedCard {
+    OutlinedCard {
         Row(
             modifier = Modifier
                 .fillMaxWidth(),
