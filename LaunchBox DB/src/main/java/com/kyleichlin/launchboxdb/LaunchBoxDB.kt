@@ -91,6 +91,21 @@ class LaunchBoxDB {
         return images
     }
 
+    fun getPlatforms(): List<PlatformPreview> {
+        val doc = Jsoup.connect(BASE_URL).get()
+
+        val platforms = mutableListOf<PlatformPreview>()
+
+        doc.select(".list-item")
+            .forEach {
+                platforms.add(
+                    PlatformPreview.fromElement(BASE_URL, it)
+                )
+            }
+
+        return platforms
+    }
+
     fun String.extractLastTextInParentheses(): String? {
         val pattern = Pattern.compile("\\([^)]*\\)")
         val matcher = pattern.matcher(this)

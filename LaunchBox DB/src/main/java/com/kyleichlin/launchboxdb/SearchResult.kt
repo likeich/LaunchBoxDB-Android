@@ -24,14 +24,15 @@ data class SearchResult(
 
     companion object {
         fun fromElement(baseUrl: String, element: Element): SearchResult {
+            val detailsUrl = baseUrl + element.select(".list-item").attr("href")
+
             return SearchResult(
                 title = element.select("h3").text(),
                 imageUrl = element.select(".img-responsive").attr("src"),
                 platform = element.select(".sub").text(),
                 description = element.select("p").last()!!.text(),
-                gameDetailsUrl = baseUrl + element.select(".list-item").attr("href"),
-                gameImagesUrl = baseUrl + element.select(".list-item").attr("href")
-                    .replace("details", "images")
+                gameDetailsUrl = detailsUrl,
+                gameImagesUrl = detailsUrl.replace("/details/", "/images/")
             )
         }
     }
