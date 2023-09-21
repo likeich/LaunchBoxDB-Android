@@ -1,5 +1,9 @@
 package com.kyleichlin.launchboxdb
 
+import com.kyleichlin.launchboxdb.model.GameDetails
+import com.kyleichlin.launchboxdb.model.GameImage
+import com.kyleichlin.launchboxdb.model.PlatformPreview
+import com.kyleichlin.launchboxdb.model.SearchResult
 import org.jsoup.Jsoup
 import java.util.regex.Pattern
 
@@ -32,14 +36,19 @@ class LaunchBoxDB {
         return results
     }
 
-    fun getGame(url: String): GameDetails {
-        val doc = Jsoup.connect(url).get()
+    fun getGameDetails(url: String): GameDetails? {
+        val doc = try {
+            Jsoup.connect(url).get()
+        } catch (e: Exception) {
+            return null
+        }
 
         var name = ""
         var platform = ""
         var releaseDate = ""
         var overview = ""
         var gameType = GameType.UNKNOWN
+        var extraDetails = mutableMapOf<String, String>()
 
         doc.select(".table")
             .select("tr")
@@ -53,6 +62,11 @@ class LaunchBoxDB {
                     "Release Date" -> releaseDate = text
                     "Overview" -> overview = text
                     "Game Type" -> gameType = gameTypeMap[text] ?: GameType.UNKNOWN
+                    else -> {
+                        if (header.isNotBlank() && text.isNotBlank()) {
+                            extraDetails[header] = text
+                        }
+                    }
                 }
             }
 
@@ -61,7 +75,9 @@ class LaunchBoxDB {
             platform = platform,
             releaseDate = releaseDate,
             overview = overview,
-            gameType = gameType
+            gameType = gameType,
+            extraDetails = extraDetails,
+            imageUrl = doc.select(".header-art").attr("src").ifBlank { null }
         )
     }
 
@@ -83,7 +99,8 @@ class LaunchBoxDB {
                     GameImage(
                         url = imageUrl,
                         type = imageTypeMap[imageType] ?: ImageType.UNKNOWN,
-                        region = regionMap[region] ?: Region.UNKNOWN
+                        region = regionMap[region] ?: Region.UNKNOWN,
+                        altText = it.select("img").attr("alt")
                     )
                 )
             }

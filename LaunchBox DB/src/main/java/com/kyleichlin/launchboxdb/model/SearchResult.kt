@@ -1,5 +1,8 @@
-package com.kyleichlin.launchboxdb
+package com.kyleichlin.launchboxdb.model
 
+import com.kyleichlin.launchboxdb.GameType
+import com.kyleichlin.launchboxdb.LaunchBoxDB
+import com.kyleichlin.launchboxdb.gameTypeMap
 import org.jsoup.nodes.Element
 
 data class SearchResult(
@@ -13,10 +16,6 @@ data class SearchResult(
     val gameType: GameType
         get() = gameTypeMap[platform.split(" - ")[1]]
             ?: GameType.UNKNOWN
-
-    fun getDetails(): GameDetails {
-        return LaunchBoxDB().getGame(gameDetailsUrl)
-    }
 
     fun getImages(): List<GameImage> {
         return LaunchBoxDB().getGameImages(gameImagesUrl)

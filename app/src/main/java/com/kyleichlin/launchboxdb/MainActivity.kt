@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.Crossfade
@@ -15,15 +14,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.exclude
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -33,33 +29,24 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.VideogameAsset
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemColors
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -67,18 +54,25 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavBackStackEntry
+import androidx.navigation.NavController
+import androidx.navigation.NavDestination
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
+import com.kyleichlin.launchboxdb.model.PlatformPreview
+import com.kyleichlin.launchboxdb.model.SearchResult
 import com.kyleichlin.launchboxdb.ui.theme.LaunchBoxDBTheme
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import com.kyleichlin.launchboxdb.view.GameDetailsPage
+import com.kyleichlin.launchboxdb.view.GamePage
+import com.kyleichlin.launchboxdb.view.PlatformPage
+import com.kyleichlin.launchboxdb.view.SettingsPage
 
 class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
@@ -86,12 +80,17 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             LaunchBoxDBTheme {
-                var currentPage by remember { mutableStateOf(Page.GAMES) }
+                val navController = rememberNavController()
+                val currentRoute = currentRouteTracker(navController)
+                var topBarTitle by remember { mutableStateOf("Games") }
+                val setTopBarTitle = { title: String ->
+                    topBarTitle = title
+                }
 
                 Scaffold(
                     topBar = {
                         TopAppBar(
-                            title = { Text("LaunchBox DB") },
+                            title = { Text(topBarTitle) },
                             actions = {
                                 IconButton(
                                     onClick = {
@@ -110,8 +109,8 @@ class MainActivity : ComponentActivity() {
                     bottomBar = {
                         NavigationBar {
                             NavigationBarItem(
-                                selected = currentPage == Page.GAMES,
-                                onClick = { currentPage = Page.GAMES },
+                                selected = currentRoute == Page.GAMES.name,
+                                onClick = { navController.navigate(Page.GAMES.name) },
                                 icon = {
                                     Icon(
                                         imageVector = Icons.Default.Games,
@@ -121,8 +120,8 @@ class MainActivity : ComponentActivity() {
                                 label = { Text(text = "Games") }
                             )
                             NavigationBarItem(
-                                selected = currentPage == Page.PLATFORMS,
-                                onClick = { currentPage = Page.PLATFORMS },
+                                selected = currentRoute == Page.PLATFORMS.name,
+                                onClick = { navController.navigate(Page.PLATFORMS.name) },
                                 icon = {
                                     Icon(
                                         imageVector = Icons.Default.VideogameAsset,
@@ -132,8 +131,8 @@ class MainActivity : ComponentActivity() {
                                 label = { Text(text = "Platforms") }
                             )
                             NavigationBarItem(
-                                selected = currentPage == Page.SETTINGS,
-                                onClick = { currentPage = Page.SETTINGS },
+                                selected = currentRoute == Page.SETTINGS.name,
+                                onClick = { navController.navigate(Page.SETTINGS.name) },
                                 icon = {
                                     Icon(
                                         imageVector = Icons.Default.Settings,
@@ -145,10 +144,39 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 ) { paddingValues ->
-                    when (currentPage) {
-                        Page.GAMES -> GamePage(modifier = Modifier.padding(paddingValues))
-                        Page.PLATFORMS -> PlatformPage(modifier = Modifier.padding(paddingValues))
-                        Page.SETTINGS -> SettingsPage(modifier = Modifier.padding(paddingValues))
+                    NavHost(
+                        navController = navController,
+                        startDestination = Page.GAMES.name
+                    ) {
+                        composable(Page.GAMES.name) {
+                            GamePage(
+                                modifier = Modifier.padding(paddingValues),
+                                navController,
+                                setTopBarTitle
+                            )
+                        }
+                        composable(Page.PLATFORMS.name) {
+                            PlatformPage(
+                                modifier = Modifier.padding(paddingValues),
+                                setTopBarTitle
+                            )
+                        }
+                        composable(Page.SETTINGS.name) {
+                            SettingsPage(
+                                modifier = Modifier.padding(paddingValues),
+                                setTopBarTitle
+                            )
+                        }
+                        composable("${Page.GAME_DETAILS.name}?url={url}") { backStackEntry: NavBackStackEntry ->
+                            val url = backStackEntry.arguments?.getString("url")
+                            if (url != null) {
+                                GameDetailsPage(
+                                    modifier = Modifier.padding(paddingValues),
+                                    url = url,
+                                    setTopBarTitle = setTopBarTitle
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -156,72 +184,28 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    fun SettingsPage(modifier: Modifier) {
-        Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.fillMaxWidth(.7f),
-            ) {
-                Text(
-                    text = "LaunchBox DB (Unofficial)",
-                    textAlign = TextAlign.Center,
-                    fontWeight = FontWeight.Bold,
-                    style = MaterialTheme.typography.titleLarge
-                )
-                Text(text = "Copyright © 2023 Kyle Eichlin", textAlign = TextAlign.Center)
-                Text(text = "Designed with ✝️ in Hawaii", textAlign = TextAlign.Center)
-                Text(
-                    text = "This app is in no way affiliated with LaunchBox or Unbroken Software, LLC.",
-                    style = MaterialTheme.typography.bodySmall,
-                    textAlign = TextAlign.Center
-                )
-            }
+    fun currentRouteTracker(navController: NavHostController): String? {
+        // Use remember to make the currentRoute variable observable
+        val currentRoute = remember { mutableStateOf<String?>(null) }
+
+        // Create a listener that updates the currentRoute whenever the destination changes
+        val listener = { controller: NavController, destination: NavDestination, bundle: Bundle? ->
+            currentRoute.value = destination.route
         }
+
+        // Add the listener to the NavController
+        navController.addOnDestinationChangedListener(listener)
+
+        // Return the currentRoute
+        return currentRoute.value
     }
 }
 
 enum class Page {
     GAMES,
+    GAME_DETAILS,
     PLATFORMS,
     SETTINGS
-}
-
-@Composable
-fun GamePage(modifier: Modifier) {
-    val db = LaunchBoxDB()
-    val results: SnapshotStateList<SearchResult> =
-        remember { mutableStateListOf() }
-    var searchJob: Job? by remember { mutableStateOf(null) }
-
-    LoadingAnimation(loading = searchJob?.isActive == true) {
-        LazyColumn(
-            modifier = modifier
-                .padding(start = 10.dp, end = 10.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-            userScrollEnabled = true
-        ) {
-            item {
-                SearchBar(onSearch = {
-                    results.clear()
-
-                    searchJob?.cancel()
-                    searchJob = CoroutineScope(Dispatchers.IO).launch {
-                        val query = db.searchQuery(it)
-
-                        withContext(Dispatchers.Main) {
-                            results.addAll(query)
-                            searchJob = null
-                        }
-                    }
-                })
-            }
-
-            items(results) {
-                SearchResultView(searchResult = it)
-            }
-        }
-    }
 }
 
 @Composable
@@ -267,13 +251,13 @@ fun SearchBar(onSearch: (String) -> Unit) {
 }
 
 @Composable
-fun SearchResultView(searchResult: SearchResult) {
+fun SearchResultView(searchResult: SearchResult, navController: NavHostController) {
     val context = LocalContext.current
     Card(
         modifier = Modifier
             .height(90.dp)
             .clickable {
-                openUrl(searchResult.gameDetailsUrl, context)
+                navController.navigate("${Page.GAME_DETAILS.name}?url=${searchResult.gameDetailsUrl}")
             }
     ) {
         Row(
@@ -304,36 +288,6 @@ fun SearchResultView(searchResult: SearchResult) {
                     maxLines = 1,
                     style = MaterialTheme.typography.bodySmall
                 )
-            }
-        }
-    }
-}
-
-@Composable
-fun PlatformPage(modifier: Modifier) {
-    val platforms = remember { mutableStateListOf<PlatformPreview>() }
-    var loadingJob by remember { mutableStateOf<Job?>(null) }
-
-    LaunchedEffect(Unit) {
-        loadingJob?.cancel()
-
-        loadingJob = CoroutineScope(Dispatchers.IO).launch {
-            val loaded = LaunchBoxDB().getPlatforms()
-
-            withContext(Dispatchers.Main) {
-                platforms.addAll(loaded)
-                loadingJob = null
-            }
-        }
-    }
-
-    LoadingAnimation(loading = loadingJob?.isActive == true) {
-        LazyColumn(
-            modifier.padding(start = 10.dp, end = 10.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            items(platforms) {
-                PlatformPreviewView(it)
             }
         }
     }

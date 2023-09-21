@@ -1,4 +1,4 @@
-package com.kyleichlin.launchboxdb
+package com.kyleichlin.launchboxdb.model
 
 import org.jsoup.nodes.Element
 
