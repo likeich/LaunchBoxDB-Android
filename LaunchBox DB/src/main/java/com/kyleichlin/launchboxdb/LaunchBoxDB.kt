@@ -1,5 +1,6 @@
 package com.kyleichlin.launchboxdb
 
+import android.util.Log
 import com.kyleichlin.launchboxdb.model.Details
 import com.kyleichlin.launchboxdb.model.GameDetails
 import com.kyleichlin.launchboxdb.model.GameImage
@@ -7,6 +8,8 @@ import com.kyleichlin.launchboxdb.model.PlatformDetails
 import com.kyleichlin.launchboxdb.model.PlatformPreview
 import com.kyleichlin.launchboxdb.model.SearchResult
 import org.jsoup.Jsoup
+import java.net.HttpURLConnection
+import java.net.URL
 import java.util.regex.Pattern
 
 fun main() {
@@ -15,13 +18,14 @@ fun main() {
         .forEach {
             println(
                 it.getImages()
-                    .filter { it.type == ImageType.BOX_FRONT}
+                    .filter { it.type == ImageType.BOX_FRONT }
             )
         }
 }
 
 class LaunchBoxDB {
     val BASE_URL = "https://gamesdb.launchbox-app.com"
+    val PLATFORM_URL = "$BASE_URL/page/1"
     val SEARCH_URL = "$BASE_URL/games/results/"
 
     fun searchQuery(query: String): List<SearchResult> {
@@ -118,18 +122,24 @@ class LaunchBoxDB {
     }
 
     fun getPlatforms(): List<PlatformPreview> {
-        val doc = Jsoup.connect(BASE_URL).get()
-
+        var url = PLATFORM_URL
         val platforms = mutableListOf<PlatformPreview>()
 
-        doc.select(".list-item")
-            .forEach {
-                platforms.add(
-                    PlatformPreview.fromElement(BASE_URL, it)
-                )
-            }
+        while (true) {
+            val doc = Jsoup.connect(url).get()
 
-        return platforms
+            val listElements = doc.select(".list-item")
+            if (listElements.isEmpty()) return platforms
+
+            listElements
+                .forEach {
+                    platforms.add(
+                        PlatformPreview.fromElement(BASE_URL, it)
+                    )
+                }
+
+            url = url.replace(url.last().toString(), (url.last().toString().toInt() + 1).toString())
+        }
     }
 
     fun String.extractLastTextInParentheses(): String? {
