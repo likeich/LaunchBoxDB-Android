@@ -158,6 +158,7 @@ class MainActivity : ComponentActivity() {
                         composable(Page.PLATFORMS.name) {
                             PlatformPage(
                                 modifier = Modifier.padding(paddingValues),
+                                navController,
                                 setTopBarTitle
                             )
                         }
@@ -167,7 +168,7 @@ class MainActivity : ComponentActivity() {
                                 setTopBarTitle
                             )
                         }
-                        composable("${Page.GAME_DETAILS.name}?url={url}") { backStackEntry: NavBackStackEntry ->
+                        composable("${Page.DETAILS.name}?url={url}") { backStackEntry: NavBackStackEntry ->
                             val url = backStackEntry.arguments?.getString("url")
                             if (url != null) {
                                 GameDetailsPage(
@@ -203,7 +204,7 @@ class MainActivity : ComponentActivity() {
 
 enum class Page {
     GAMES,
-    GAME_DETAILS,
+    DETAILS,
     PLATFORMS,
     SETTINGS
 }
@@ -257,7 +258,7 @@ fun SearchResultView(searchResult: SearchResult, navController: NavHostControlle
         modifier = Modifier
             .height(90.dp)
             .clickable {
-                navController.navigate("${Page.GAME_DETAILS.name}?url=${searchResult.gameDetailsUrl}")
+                navController.navigate("${Page.DETAILS.name}?url=${searchResult.gameDetailsUrl}")
             }
     ) {
         Row(
@@ -294,7 +295,7 @@ fun SearchResultView(searchResult: SearchResult, navController: NavHostControlle
 }
 
 @Composable
-fun PlatformPreviewView(platformPreview: PlatformPreview) {
+fun PlatformPreviewView(platformPreview: PlatformPreview, onDetailsClicked: () -> Unit, onImagesClicked: () -> Unit) {
     Card {
         Column(
             modifier = Modifier
@@ -324,10 +325,10 @@ fun PlatformPreviewView(platformPreview: PlatformPreview) {
                     openUrl(platformPreview.gamesUrl, context)
                 }),
                 MultiButtonData(text = "Details", onClick = {
-                    openUrl(platformPreview.detailsUrl, context)
+                    onDetailsClicked()
                 }),
                 MultiButtonData(text = "Images", onClick = {
-                    openUrl(platformPreview.imagesUrl, context)
+                    onImagesClicked()
                 })
             ))
         }

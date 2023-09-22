@@ -13,8 +13,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
 import com.kyleichlin.launchboxdb.LaunchBoxDB
 import com.kyleichlin.launchboxdb.LoadingAnimation
+import com.kyleichlin.launchboxdb.Page
 import com.kyleichlin.launchboxdb.PlatformPreviewView
 import com.kyleichlin.launchboxdb.model.PlatformPreview
 import kotlinx.coroutines.CoroutineScope
@@ -24,7 +26,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
-fun PlatformPage(modifier: Modifier, setTopBarTitle: (String) -> Unit) {
+fun PlatformPage(
+    modifier: Modifier, navController: NavHostController, setTopBarTitle: (String) -> Unit
+) {
     val platforms = remember { mutableStateListOf<PlatformPreview>() }
     var loadingJob by remember { mutableStateOf<Job?>(null) }
 
@@ -48,7 +52,15 @@ fun PlatformPage(modifier: Modifier, setTopBarTitle: (String) -> Unit) {
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             items(platforms) {
-                PlatformPreviewView(it)
+                PlatformPreviewView(
+                    it,
+                    onDetailsClicked = {
+                        navController.navigate("${Page.DETAILS.name}?url=${it.detailsUrl}")
+                    },
+                    onImagesClicked = {
+                        navController.navigate("${Page.DETAILS.name}?url=${it.detailsUrl}")
+                    }
+                )
             }
         }
     }

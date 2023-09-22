@@ -1,7 +1,9 @@
 package com.kyleichlin.launchboxdb
 
+import com.kyleichlin.launchboxdb.model.Details
 import com.kyleichlin.launchboxdb.model.GameDetails
 import com.kyleichlin.launchboxdb.model.GameImage
+import com.kyleichlin.launchboxdb.model.PlatformDetails
 import com.kyleichlin.launchboxdb.model.PlatformPreview
 import com.kyleichlin.launchboxdb.model.SearchResult
 import org.jsoup.Jsoup
@@ -36,19 +38,19 @@ class LaunchBoxDB {
         return results
     }
 
-    fun getGameDetails(url: String): GameDetails? {
+    fun getDetails(url: String): Details? {
         val doc = try {
             Jsoup.connect(url).get()
         } catch (e: Exception) {
             return null
         }
 
+        val isGame = url.contains("/games/")
+
         var name = ""
-        var platform = ""
         var releaseDate = ""
         var overview = ""
-        var gameType = GameType.UNKNOWN
-        var extraDetails = mutableMapOf<String, String>()
+        val extraDetails = mutableMapOf<String, String>()
 
         doc.select(".table")
             .select("tr")
@@ -58,10 +60,9 @@ class LaunchBoxDB {
 
                 when (header) {
                     "Name" -> name = text
-                    "Platform" -> platform = text
                     "Release Date" -> releaseDate = text
                     "Overview" -> overview = text
-                    "Game Type" -> gameType = gameTypeMap[text] ?: GameType.UNKNOWN
+                    "Add Alternate Name" -> {} // Skip
                     else -> {
                         if (header.isNotBlank() && text.isNotBlank()) {
                             extraDetails[header] = text
@@ -70,15 +71,23 @@ class LaunchBoxDB {
                 }
             }
 
-        return GameDetails(
-            name = name,
-            platform = platform,
-            releaseDate = releaseDate,
-            overview = overview,
-            gameType = gameType,
-            extraDetails = extraDetails,
-            imageUrl = doc.select(".header-art").attr("src").ifBlank { null }
-        )
+        return if (isGame) {
+            GameDetails(
+                name = name,
+                releaseDate = releaseDate,
+                overview = overview,
+                extraDetails = extraDetails,
+                imageUrl = doc.select(".header-art").attr("src").ifBlank { null }
+            )
+        } else {
+            PlatformDetails(
+                name = name,
+                releaseDate = releaseDate,
+                overview = overview,
+                extraDetails = extraDetails,
+                imageUrl = doc.select(".header-device").attr("src").ifBlank { null }
+            )
+        }
     }
 
     fun getGameImages(url: String): List<GameImage> {

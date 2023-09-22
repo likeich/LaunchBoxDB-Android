@@ -19,6 +19,7 @@ import com.kyleichlin.launchboxdb.LaunchBoxDB
 import com.kyleichlin.launchboxdb.LoadingAnimation
 import com.kyleichlin.launchboxdb.SearchBar
 import com.kyleichlin.launchboxdb.SearchResultView
+import com.kyleichlin.launchboxdb.model.GameImage
 import com.kyleichlin.launchboxdb.model.SearchResult
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
