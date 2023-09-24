@@ -10,11 +10,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
@@ -33,7 +31,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -41,7 +38,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.kyleichlin.launchboxdb.ImageType
 import com.kyleichlin.launchboxdb.LaunchBoxDB
 import com.kyleichlin.launchboxdb.LoadingAnimation
 import com.kyleichlin.launchboxdb.MultiButton
@@ -49,7 +45,7 @@ import com.kyleichlin.launchboxdb.MultiButtonData
 import com.kyleichlin.launchboxdb.R
 import com.kyleichlin.launchboxdb.model.Details
 import com.kyleichlin.launchboxdb.model.GameDetails
-import com.kyleichlin.launchboxdb.model.GameImage
+import com.kyleichlin.launchboxdb.model.LaunchBoxImage
 import com.kyleichlin.launchboxdb.openUrl
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -58,17 +54,23 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
-fun GameDetailsPage(modifier: Modifier, url: String, setTopBarTitle: (String) -> Unit) {
+fun DetailsPage(modifier: Modifier, id: String, setTopBarTitle: (String) -> Unit) {
     val db = remember { LaunchBoxDB() }
     var details: Details? by remember { mutableStateOf(null) }
-    val images: SnapshotStateList<GameImage> = remember { mutableStateListOf() }
+    val images: SnapshotStateList<LaunchBoxImage> = remember { mutableStateListOf() }
     var loadingJob: Job? by remember { mutableStateOf(null) }
+    val dbId = id.split(":").last().toInt()
+    val type = if (id.startsWith("platform")) {
+        LaunchBoxDB.ContentType.PLATFORM
+    } else {
+        LaunchBoxDB.ContentType.GAME
+    }
 
-    LaunchedEffect(url) {
+    LaunchedEffect(Unit) {
         setTopBarTitle("Loading...")
         loadingJob = CoroutineScope(Dispatchers.IO).launch {
-            val loadedDetails = db.getDetails(url)
-            val gameImages = db.getGameImages(url.replace("/details/", "/images/"))
+            val loadedDetails = db.getDetails(dbId, type)
+            val gameImages = db.getImages(dbId, type)
             images.clear()
 
             withContext(Dispatchers.Main) {
@@ -94,7 +96,7 @@ fun GameDetailsPage(modifier: Modifier, url: String, setTopBarTitle: (String) ->
 }
 
 @Composable
-fun DetailsView(details: Details, images: List<GameImage> = emptyList()) {
+fun DetailsView(details: Details, images: List<LaunchBoxImage> = emptyList()) {
     Card {
         Row(
             verticalAlignment = Alignment.Bottom,
@@ -196,7 +198,7 @@ fun DetailsView(details: Details) {
 }
 
 @Composable
-fun ImagesView(images: List<GameImage>) {
+fun ImagesView(images: List<LaunchBoxImage>) {
     LazyVerticalStaggeredGrid(
         columns = StaggeredGridCells.Adaptive(75.dp),
         verticalItemSpacing = 10.dp,
@@ -210,7 +212,7 @@ fun ImagesView(images: List<GameImage>) {
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun ImageView(image: GameImage) {
+fun ImageView(image: LaunchBoxImage) {
     val context = LocalContext.current
     AsyncImage(
         model = image.url,

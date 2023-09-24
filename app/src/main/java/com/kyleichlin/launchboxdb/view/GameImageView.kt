@@ -2,7 +2,6 @@ package com.kyleichlin.launchboxdb.view
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Text
@@ -15,10 +14,10 @@ import coil.compose.AsyncImage
 import com.kyleichlin.launchboxdb.ImageType
 import com.kyleichlin.launchboxdb.R
 import com.kyleichlin.launchboxdb.Region
-import com.kyleichlin.launchboxdb.model.GameImage
+import com.kyleichlin.launchboxdb.model.LaunchBoxImage
 
 @Composable
-fun GameImageView(image: GameImage) {
+fun GameImageView(image: LaunchBoxImage) {
     ElevatedCard {
         Row {
             AsyncImage(
@@ -40,7 +39,7 @@ fun GameImageView(image: GameImage) {
 @Composable
 fun GameImageViewPreview() {
     GameImageView(
-        image = GameImage(
+        image = LaunchBoxImage(
             url = "https://images.launchbox-app.com/ab1607eb-e5a7-4867-921c-4021d5cc2041.jpg",
             type = ImageType.BOX_FRONT,
             region = Region.NORTH_AMERICA,

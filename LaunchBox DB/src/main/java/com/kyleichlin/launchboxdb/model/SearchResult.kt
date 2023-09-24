@@ -8,17 +8,21 @@ import org.jsoup.nodes.Element
 data class SearchResult(
     val title: String,
     val imageUrl: String,
-    val platform: String,
+    val details: String,
     val description: String,
-    val gameDetailsUrl: String,
-    val gameImagesUrl: String,
+    val databaseId: Int
 ) {
-    val gameType: GameType
-        get() = gameTypeMap[platform.split(" - ")[1]]
-            ?: GameType.UNKNOWN
+    val gameDetailsUrl: String = "${LaunchBoxDB.Webpage.GAME_DETAILS.url}$databaseId"
+    val gameImagesUrl: String = "${LaunchBoxDB.Webpage.GAME_IMAGES.url}$databaseId"
 
-    fun getImages(): List<GameImage> {
-        return LaunchBoxDB().getGameImages(gameImagesUrl)
+    val gameType: GameType
+        get() = GameType.values().find { details.contains(it.dbName, true) }
+            ?: GameType.UNKNOWN
+    val platform: String
+        get() = details.substringBefore(" - ")
+
+    fun getImages(): List<LaunchBoxImage> {
+        return LaunchBoxDB().getImages(databaseId, LaunchBoxDB.ContentType.GAME)
     }
 
     companion object {
@@ -28,10 +32,9 @@ data class SearchResult(
             return SearchResult(
                 title = element.select("h3").text(),
                 imageUrl = element.select(".img-responsive").attr("src"),
-                platform = element.select(".sub").text(),
+                details = element.select(".sub").text(),
                 description = element.select("p").last()!!.text(),
-                gameDetailsUrl = detailsUrl,
-                gameImagesUrl = detailsUrl.replace("/details/", "/images/")
+                databaseId = LaunchBoxDB.extractDatabaseId(detailsUrl)
             )
         }
     }

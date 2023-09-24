@@ -69,7 +69,7 @@ import coil.compose.AsyncImage
 import com.kyleichlin.launchboxdb.model.PlatformPreview
 import com.kyleichlin.launchboxdb.model.SearchResult
 import com.kyleichlin.launchboxdb.ui.theme.LaunchBoxDBTheme
-import com.kyleichlin.launchboxdb.view.GameDetailsPage
+import com.kyleichlin.launchboxdb.view.DetailsPage
 import com.kyleichlin.launchboxdb.view.GamePage
 import com.kyleichlin.launchboxdb.view.PlatformPage
 import com.kyleichlin.launchboxdb.view.SettingsPage
@@ -171,9 +171,9 @@ class MainActivity : ComponentActivity() {
                         composable("${Page.DETAILS.name}?url={url}") { backStackEntry: NavBackStackEntry ->
                             val url = backStackEntry.arguments?.getString("url")
                             if (url != null) {
-                                GameDetailsPage(
+                                DetailsPage(
                                     modifier = Modifier.padding(paddingValues),
-                                    url = url,
+                                    id = url,
                                     setTopBarTitle = setTopBarTitle
                                 )
                             }
@@ -253,12 +253,11 @@ fun SearchBar(onSearch: (String) -> Unit) {
 
 @Composable
 fun SearchResultView(searchResult: SearchResult, navController: NavHostController) {
-    val context = LocalContext.current
     Card(
         modifier = Modifier
             .height(90.dp)
             .clickable {
-                navController.navigate("${Page.DETAILS.name}?url=${searchResult.gameDetailsUrl}")
+                navController.navigate("${Page.DETAILS.name}?url=${"game:" + searchResult.databaseId}")
             }
     ) {
         Row(

@@ -19,6 +19,7 @@ import com.kyleichlin.launchboxdb.LoadingAnimation
 import com.kyleichlin.launchboxdb.Page
 import com.kyleichlin.launchboxdb.PlatformPreviewView
 import com.kyleichlin.launchboxdb.model.PlatformPreview
+import com.kyleichlin.launchboxdb.replaceDigitsWithText
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -38,6 +39,12 @@ fun PlatformPage(
 
         loadingJob = CoroutineScope(Dispatchers.IO).launch {
             val loaded = LaunchBoxDB().getPlatforms()
+            loaded.forEach {
+                println(it.name.uppercase().replaceDigitsWithText().replace(" ", "_") + " to " + it.name + ",")
+            }
+            loaded.forEach {
+                println(it.name.replaceDigitsWithText().uppercase().replace(" ", "_") + ",")
+            }
 
             withContext(Dispatchers.Main) {
                 platforms.addAll(loaded)
@@ -55,10 +62,10 @@ fun PlatformPage(
                 PlatformPreviewView(
                     it,
                     onDetailsClicked = {
-                        navController.navigate("${Page.DETAILS.name}?url=${it.detailsUrl}")
+                        navController.navigate("${Page.DETAILS.name}?url=${"platform:" + it.databaseId}")
                     },
                     onImagesClicked = {
-                        navController.navigate("${Page.DETAILS.name}?url=${it.detailsUrl}")
+                        navController.navigate("${Page.DETAILS.name}?url=${"platform:" + it.databaseId}")
                     }
                 )
             }

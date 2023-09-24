@@ -5,13 +5,15 @@ class PlatformDetails(
     imageUrl: String?,
     releaseDate: String,
     overview: String,
-    extraDetails: Map<String, String>
+    extraDetails: Map<String, String>,
+    databaseId: Int
 ) : Details(
     name,
     imageUrl,
     releaseDate,
     overview,
-    extraDetails
+    extraDetails,
+    databaseId
 ) {
 
 }
