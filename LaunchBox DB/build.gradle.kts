@@ -48,8 +48,8 @@ afterEvaluate {
     publishing {
         publications {
             register<MavenPublication>("release") {
-                groupId = "com.kyleichlin"
-                artifactId = "launchboxdb"
+                groupId = "com.github.likeich"
+                artifactId = "launchboxdb-android"
                 version = ".1"
 
                 afterEvaluate {
