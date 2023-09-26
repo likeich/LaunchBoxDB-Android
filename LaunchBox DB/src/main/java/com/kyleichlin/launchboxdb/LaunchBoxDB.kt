@@ -11,7 +11,7 @@ import java.util.regex.Pattern
 
 fun main() {
     val db = LaunchBoxDB()
-    db.searchQuery("cave story 3d", "ds", "nintendo ds")
+    db.searchQuery("star fox assault", "gc", "gamecube")
         .forEach {
             println(it.platform)
             println(
@@ -25,6 +25,8 @@ fun main() {
 class LaunchBoxDB {
     companion object {
         const val BASE_URL = "https://gamesdb.launchbox-app.com"
+        const val GAMES_URL = "$BASE_URL/games"
+        const val PLATFORMS_URL = "$BASE_URL/platforms"
 
         fun extractDatabaseId(url: String): Int {
             return url.split("/").last().substringBefore("-").toInt()
@@ -33,12 +35,12 @@ class LaunchBoxDB {
 
     enum class Webpage(val url: String) {
         PLATFORMS("$BASE_URL/page/1"),
-        GAME_SEARCH("$BASE_URL/games/results/"),
-        GAME_DETAILS("$BASE_URL/games/details/"),
-        GAME_IMAGES("$BASE_URL/games/images/"),
-        PLATFORM_DETAILS("$BASE_URL/platforms/details/"),
-        PLATFORM_GAMES("$BASE_URL/platforms/games/"),
-        PLATFORM_IMAGES("$BASE_URL/platforms/images/"),
+        GAME_SEARCH("$GAMES_URL/results/"),
+        GAME_DETAILS("$GAMES_URL/details/"),
+        GAME_IMAGES("$GAMES_URL/images/"),
+        PLATFORM_DETAILS("$PLATFORMS_URL/details/"),
+        PLATFORM_GAMES("$PLATFORMS_URL/games/"),
+        PLATFORM_IMAGES("$PLATFORMS_URL/images/"),
     }
 
     fun searchQuery(gameQuery: String, vararg platforms: String): List<SearchResult> {
@@ -51,10 +53,11 @@ class LaunchBoxDB {
                         it.contains(result.platform, true)
             }
         }.sortedBy {
+            val queryDistance = gameQuery.distanceTo(it.title, true)
             val distances = platforms.map { platform -> platform.distanceTo(it.platform, true) }
+            val combinedDistance = (queryDistance + distances.max()) / 2f
 
-            println(it.platform + " " + distances.max())
-            (1f - distances.max()) // Makes closer matches appear first
+            (1f - combinedDistance) // Makes closer matches appear first
         }
     }
 
