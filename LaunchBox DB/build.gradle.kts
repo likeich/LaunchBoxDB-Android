@@ -44,16 +44,49 @@ dependencies {
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
 }
 
-afterEvaluate {
-    publishing {
-        publications {
-            register<MavenPublication>("release") {
-                groupId = "com.github.likeich"
-                artifactId = "launchboxdb-android"
-                version = ".1"
+publishing {
+    publications {
+        create<MavenPublication>("releasePublication") {
+            // Set the coordinates of the library
+            groupId = "com.github.likeich"
+            artifactId = "launchboxdb-android"
+            version = "1.0.0"
 
-                afterEvaluate {
-                    from(components["release"])
+            // Reference the release variant of the Android library
+            afterEvaluate {
+                val release = components.findByName("release")
+                if (release != null) {
+                    from(release)
+                } else {
+                    throw GradleException("Release component not found in project.")
+                }
+            }
+
+            // Add POM information for the library
+            pom {
+                name.set("LaunchBoxDB Android")
+                description.set("Easy access to the LaunchBoxDB website.")
+                url.set("https://github.com/likeich/LaunchBoxDB-Android") // GitHub repo URL
+
+                licenses {
+                    license {
+                        name.set("MIT License")
+                        url.set("https://opensource.org/licenses/MIT")
+                    }
+                }
+
+                developers {
+                    developer {
+                        id.set("likeich")
+                        name.set("Kyle Eichlin")
+                        email.set("k2launcher@gmail.com")
+                    }
+                }
+
+                scm {
+                    connection.set("scm:git:git://github.com/likeich/LaunchBoxDB-Android.git")
+                    developerConnection.set("scm:git:ssh://github.com:likeich/LaunchBoxDB-Android.git")
+                    url.set("http://github.com/likeich/LaunchBoxDB-Android/")
                 }
             }
         }
